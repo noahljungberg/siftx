@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Vendor-qualified package id, matching crates.io and PyPI: `Sift` is an
+         unrelated vendor's on NuGet, and no single word is free across all
+         five registries. The assembly and namespace stay `SiftX`, so consumers
+         still write `using SiftX;`. -->
+    <PackageId>Truespar.SiftX</PackageId>
+    <AssemblyName>SiftX</AssemblyName>
+    <RootNamespace>SiftX</RootNamespace>
+    <Version>0.1.0</Version>
+    <Description>Cross-platform document and image processing library - C# bindings</Description>
+    <Authors>Truespar</Authors>
+    <Copyright>Copyright (c) 2026 The Intelligence Company AB (publ)</Copyright>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/truespar/siftx</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/truespar/siftx</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <!--
+    Native libraries go into the package under runtimes/<rid>/native/, which is
+    the layout the .NET host resolves automatically and the one NativeResolver
+    probes. Without this the package would contain only the managed assembly
+    and every call would fail on DllNotFoundException.
+
+    runtimes/ here is a staging directory the release build fills with one
+    library per platform, each from its own runner. It is gitignored, so a
+    local `dotnet pack` produces a package carrying whatever has been staged
+    plus the host library built below - correct for development, and not
+    something to publish.
+  -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)../../runtimes/**/*"
+          Pack="true" PackagePath="runtimes/" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <SiftXNativeDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../../target/release'))</SiftXNativeDir>
+    <SiftXHostRid>$([System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier)</SiftXHostRid>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(SiftXNativeDir)/libsiftx.so')">
+    <None Include="$(SiftXNativeDir)/libsiftx.so"
+          Pack="true" PackagePath="runtimes/$(SiftXHostRid)/native/" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(SiftXNativeDir)/libsiftx.dylib')">
+    <None Include="$(SiftXNativeDir)/libsiftx.dylib"
+          Pack="true" PackagePath="runtimes/$(SiftXHostRid)/native/" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(SiftXNativeDir)/siftx.dll')">
+    <None Include="$(SiftXNativeDir)/siftx.dll"
+          Pack="true" PackagePath="runtimes/$(SiftXHostRid)/native/" />
+  </ItemGroup>
+
+</Project>

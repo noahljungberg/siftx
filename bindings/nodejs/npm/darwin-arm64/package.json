@@ -1,0 +1,27 @@
+{
+  "name": "@truespar/siftx-darwin-arm64",
+  "version": "0.1.0",
+  "cpu": [
+    "arm64"
+  ],
+  "main": "siftx.darwin-arm64.node",
+  "files": [
+    "siftx.darwin-arm64.node"
+  ],
+  "description": "Cross-platform document and image processing library - Node.js bindings",
+  "homepage": "https://github.com/truespar/siftx#readme",
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">= 20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/truespar/siftx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/truespar/siftx/issues"
+  },
+  "os": [
+    "darwin"
+  ]
+}

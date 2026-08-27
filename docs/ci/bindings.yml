@@ -1,0 +1,91 @@
+name: Bindings
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Each binding wraps the same native library, so every job builds it first.
+# Like the Rust suites, these skip corpus-dependent tests when testdata/ is
+# absent, which it is in CI.
+
+jobs:
+  python:
+    name: python (PyO3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and test
+        working-directory: bindings/python
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --quiet 'maturin>=1.14,<2' pytest
+          .venv/bin/maturin develop --release
+          .venv/bin/python -m pytest -q
+
+  nodejs:
+    name: node.js (napi-rs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build and test
+        working-directory: bindings/nodejs
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+  csharp:
+    name: c# (net8.0, net10.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      # The test project copies the native library out of target/release, so
+      # it has to exist before dotnet test runs.
+      - name: Build native library
+        run: cargo build --release --all-features
+      - name: Test
+        working-directory: bindings/csharp
+        run: dotnet test tests/SiftX.Tests/SiftX.Tests.csproj
+
+  java:
+    name: java (Panama FFM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Build native library
+        run: cargo build --release --all-features
+      # Deliberately no SIFTX_NATIVE_LIB_PATH: the POM stages the library cargo
+      # just built into the JAR, and Native.java extracts it at runtime. This
+      # is the path a Maven consumer takes, so it is the one worth testing.
+      - name: Test
+        working-directory: bindings/java
+        run: mvn -B test

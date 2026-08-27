@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.61" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SiftX\SiftX.csproj" />
+  </ItemGroup>
+
+  <!--
+    Copy the native sift library from the Rust build output into the
+    runtimes/<rid>/native/ subdirectory of the test output.  This mirrors
+    the standard NuGet native-package layout and avoids a filename collision
+    on Windows where the managed SiftX.dll and native siftx.dll are
+    case-insensitively identical.  NativeResolver.cs already probes this path.
+  -->
+  <PropertyGroup>
+    <SiftXNativeDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\..\target\release'))</SiftXNativeDir>
+    <NativeRid>$([System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier)</NativeRid>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))">
+    <None Include="$(SiftXNativeDir)\siftx.dll" CopyToOutputDirectory="PreserveNewest" Link="runtimes\$(NativeRid)\native\siftx.dll" Condition="Exists('$(SiftXNativeDir)\siftx.dll')" />
+  </ItemGroup>
+  <ItemGroup Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">
+    <None Include="$(SiftXNativeDir)\libsiftx.so" CopyToOutputDirectory="PreserveNewest" Link="runtimes\$(NativeRid)\native\libsiftx.so" Condition="Exists('$(SiftXNativeDir)\libsiftx.so')" />
+  </ItemGroup>
+  <ItemGroup Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">
+    <None Include="$(SiftXNativeDir)\libsiftx.dylib" CopyToOutputDirectory="PreserveNewest" Link="runtimes\$(NativeRid)\native\libsiftx.dylib" Condition="Exists('$(SiftXNativeDir)\libsiftx.dylib')" />
+  </ItemGroup>
+
+</Project>

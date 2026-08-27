@@ -1,0 +1,26 @@
+# cargo-about: which licences may appear in a distributed build, and where to
+# find their texts. This is the attribution side; deny.toml is the policy side.
+#
+#   cargo about generate --fail about.hbs | tr -d '\r' > THIRD-PARTY-NOTICES.md
+#
+# `targets` is deliberately narrow. Without it the crawl includes crates that
+# only build for other platforms, and would attribute code no shipped build
+# ever links.
+accepted = [
+    "Apache-2.0",
+    "MIT",
+    "0BSD",
+    "Zlib",
+]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+    "aarch64-apple-darwin",
+]
+# siftx's own crates are first-party; they have no business in a third-party
+# notices file, and leaving them in means every version bump silently stales it.
+private = { ignore = true }
+
+ignore-build-dependencies = true
+ignore-dev-dependencies = true

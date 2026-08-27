@@ -1,0 +1,35 @@
+[build-system]
+requires = ["maturin>=1.14,<2"]
+build-backend = "maturin"
+
+[project]
+# `siftx` is taken on PyPI too, by an unrelated grep-like CLI that installs a
+# top-level `siftx` module and a `siftx` console script. The distribution
+# therefore carries the vendor prefix, which cannot be claimed by anyone else,
+# while [tool.maturin] module-name keeps the import name `siftx` to match every
+# other binding. A user who installs both packages will still see a module
+# clash; there is no way to avoid that short of renaming the import too.
+name = "truespar-siftx"
+version = "0.1.0"
+description = "Cross-platform document and image processing library - Python bindings"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Repository = "https://github.com/truespar/siftx"
+
+[tool.maturin]
+module-name = "siftx"
+features = ["pyo3/extension-module"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

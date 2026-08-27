@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SiftX/SiftX.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SiftX.Tests/SiftX.Tests.csproj" />
+    <Project Path="tests/SiftX.Benchmarks/SiftX.Benchmarks.csproj" />
+  </Folder>
+</Solution>

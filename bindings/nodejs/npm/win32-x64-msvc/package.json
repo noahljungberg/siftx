@@ -1,0 +1,27 @@
+{
+  "name": "@truespar/siftx-win32-x64-msvc",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "siftx.win32-x64-msvc.node",
+  "files": [
+    "siftx.win32-x64-msvc.node"
+  ],
+  "description": "Cross-platform document and image processing library - Node.js bindings",
+  "homepage": "https://github.com/truespar/siftx#readme",
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">= 20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/truespar/siftx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/truespar/siftx/issues"
+  },
+  "os": [
+    "win32"
+  ]
+}

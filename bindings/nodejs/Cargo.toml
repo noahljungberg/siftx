@@ -1,0 +1,22 @@
+[package]
+name = "siftx-nodejs"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3", features = ["napi9"] }
+napi-derive = "3"
+siftx = { package = "truespar-siftx", path = "../..", features = ["default"] }
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

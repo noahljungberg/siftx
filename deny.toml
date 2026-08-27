@@ -1,0 +1,48 @@
+# cargo-deny: policy. What licences may enter the dependency graph, whether
+# advisories are outstanding, and where crates may come from.
+#
+# THIRD-PARTY-NOTICES.md is the other half of this - cargo-about produces the
+# attribution text those licences require. Policy here, artefact there.
+#
+#   cargo deny check
+
+[graph]
+# The targets we ship binaries for. Without this the graph pulls in crates that
+# only build elsewhere, and the policy ends up arguing about code no release
+# contains.
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+    "aarch64-apple-darwin",
+]
+
+[advisories]
+version = 2
+yanked = "warn"
+# Each entry is a decision, not a mute button. Re-check on dependency bumps.
+ignore = []
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+# Exactly the licences present today. Anything new fails the build and gets a
+# deliberate decision rather than sliding in unnoticed - which is the point of
+# having this file at all.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "0BSD",
+    "Zlib",
+]
+exceptions = []
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

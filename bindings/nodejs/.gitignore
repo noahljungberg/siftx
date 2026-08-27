@@ -1,0 +1,6 @@
+node_modules/
+target/
+*.node
+
+# package-lock.json IS committed: `npm ci` needs it, and a lockfile is
+# what makes an install reproducible. Same reasoning as Cargo.lock.

@@ -1,0 +1,74 @@
+[package]
+# Published under the vendor namespace. `sift` was taken on crates.io, PyPI and
+# NuGet, and so was `siftx` on PyPI - by a grep-like CLI that also installs a
+# `siftx` module and a `siftx` command. No unclaimed single word survives on
+# all five registries at once, so the distribution carries the vendor prefix,
+# which nobody else can take. `[lib] name` below keeps the import path `siftx`,
+# and the same split is used for the PyPI module and the .NET assembly.
+name = "truespar-siftx"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Cross-platform document and image processing library"
+repository = "https://github.com/truespar/siftx"
+readme = "README.md"
+keywords = ["exif", "metadata", "pdf", "image", "xmp"]
+categories = ["multimedia::images", "parser-implementations"]
+# docs/ is kept: README links to docs/testing.md. testdata.tar.gz is a local
+# corpus archive that must never reach the registry - it is 1.5 GB.
+exclude = ["testdata/", "testdata.tar.gz", "fuzz/", "bindings/", "examples/", ".github/"]
+
+[features]
+default = ["jpeg", "tiff", "png", "webp", "heif", "gif", "bmp", "xmp", "iptc", "icc", "pdf", "quicktime"]
+jpeg = []
+tiff = []
+png = []
+webp = []
+heif = []
+gif = []
+bmp = []
+xmp = []
+iptc = []
+icc = []
+pdf = []
+quicktime = ["heif"]
+# The C header declares one fixed set of 44 functions, so the ABI cannot vary
+# by feature: a build missing `siftx_text_pages` would still advertise it in
+# siftx.h and fail to link. `ffi` therefore pulls in the parsers it exposes.
+ffi = ["pdf", "tiff"]
+# Re-exposes the parser modules for this crate's own integration tests. Not
+# part of the public API and carries no semver guarantee - see lib.rs.
+internals = []
+
+[dependencies]
+memmap2 = "0.9"
+miniz_oxide = "0.9"
+md-5 = "0.11"
+sha2 = "0.11"
+aes = "0.9"
+cbc = "0.2"
+
+[dev-dependencies]
+# The integration suites reach into the parser modules, which are private
+# unless `internals` is on. Depending on ourselves here turns it on for
+# tests/ only, so a bare `cargo test` works.
+truespar-siftx = { path = ".", features = ["internals"] }
+tempfile = "3"
+criterion = { version = "0.8", features = ["html_reports"] }
+
+[[bench]]
+name = "parsing"
+harness = false
+
+[lib]
+name = "siftx"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "siftx"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

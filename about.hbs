@@ -1,0 +1,36 @@
+# Third-party notices
+
+SiftX is distributed as a compiled native library that links the Rust crates
+listed below. Their licences require their copyright notices to travel with any
+redistribution, which is what this file is for.
+
+Generated from the resolved dependency graph with
+[cargo-about](https://github.com/EmbarkStudios/cargo-about); regenerate with:
+
+```bash
+cargo about generate --fail about.hbs | tr -d '\r' > THIRD-PARTY-NOTICES.md
+```
+
+SiftX itself is `MIT OR Apache-2.0`; see [LICENSE](LICENSE).
+
+{{!--
+  cargo-about has no way to exclude the root crate: `private.ignore` only drops
+  crates marked `publish = false`, and truespar-siftx is meant to be published. Without
+  this guard truespar-siftx lists its own LICENSE-APACHE among the third-party notices,
+  which is the one entry that does not belong in a third-party file. truespar-siftx's own
+  licence text always forms a group of its own, so matching a single-crate
+  group named "truespar-siftx" is enough; if that ever stopped holding, the worst case is
+  truespar-siftx reappearing in the list, not a crate going unattributed.
+--}}
+{{#each licenses}}
+{{#unless (and (eq (len used_by) 1) (eq (lookup (lookup (lookup used_by 0) "crate") "name") "truespar-siftx"))}}
+## {{name}}
+
+Used by {{#each used_by}}`{{crate.name}} {{crate.version}}`{{#unless @last}}, {{/unless}}{{/each}}
+
+```
+{{text}}
+```
+
+{{/unless}}
+{{/each}}

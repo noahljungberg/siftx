@@ -1,0 +1,54 @@
+name: Bug report
+description: A file parses incorrectly, or SiftX behaves differently than documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: >
+        Include the actual output or error, not a paraphrase. For a wrong tag
+        value, show what SiftX produced and what you expected.
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+      description: >
+        If you are comparing against ExifTool or Poppler, include their output
+        and the exact command you ran.
+    validations: {required: true}
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. siftx tags photo.jpg
+        2. ...
+    validations: {required: true}
+  - type: input
+    id: file
+    attributes:
+      label: The file that triggers it
+      description: >
+        Attach it if you can share it. If you cannot, say what produced it -
+        camera model, or the software that wrote the PDF - since that is often
+        enough to identify the format quirk. Please do not attach anything
+        confidential; a file that reproduces the bug is usually easy to make.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations: {required: true}
+  - type: dropdown
+    id: binding
+    attributes:
+      label: Which binding
+      options: [Rust, C ABI, "C# / .NET", Java, Python, "Node.js", CLI]
+    validations: {required: true}
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and architecture
+      placeholder: Ubuntu 24.04 x86_64
+    validations: {required: true}

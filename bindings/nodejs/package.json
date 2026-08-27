@@ -1,0 +1,54 @@
+{
+  "name": "@truespar/siftx",
+  "version": "0.1.0",
+  "description": "Cross-platform document and image processing library - Node.js bindings",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/truespar/siftx.git"
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.8.6",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "napi": {
+    "binaryName": "siftx",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
+  "bugs": {
+    "url": "https://github.com/truespar/siftx/issues"
+  },
+  "homepage": "https://github.com/truespar/siftx#readme",
+  "optionalDependencies": {
+    "@truespar/siftx-darwin-arm64": "0.1.0",
+    "@truespar/siftx-darwin-x64": "0.1.0",
+    "@truespar/siftx-linux-arm64-gnu": "0.1.0",
+    "@truespar/siftx-linux-arm64-musl": "0.1.0",
+    "@truespar/siftx-linux-x64-gnu": "0.1.0",
+    "@truespar/siftx-linux-x64-musl": "0.1.0",
+    "@truespar/siftx-win32-x64-msvc": "0.1.0"
+  }
+}

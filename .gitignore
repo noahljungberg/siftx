@@ -1,0 +1,49 @@
+# Test data (downloaded corpora, ~2 GB) and local archives of it.
+# Both forms: `testdata/` matches a real directory, the bare name also matches
+# a symlink pointing at corpora kept outside the checkout.
+testdata
+testdata/
+testdata.tar.gz
+
+# Rust build artifacts
+/target/
+**/target/
+**/*.rs.bk
+
+# Fuzzing
+fuzz/artifacts/
+fuzz/corpus/
+
+# Python
+**/.venv/
+**/__pycache__/
+*.py[cod]
+
+# Node
+**/node_modules/
+*.node
+
+# .NET / Java build output
+**/bin/
+**/obj/
+**/.mvn/
+hs_err_pid*.log
+core.[0-9]*
+
+# Scratch
+examples/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*

@@ -1,0 +1,14 @@
+[package]
+name = "siftx-python"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+name = "siftx"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.29", features = ["extension-module"] }
+siftx = { package = "truespar-siftx", path = "../..", features = ["default"] }

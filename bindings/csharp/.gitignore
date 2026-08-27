@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Native libraries staged into the NuGet package by the release build.
+runtimes/

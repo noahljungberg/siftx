@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+# A note on what CI can and cannot check here. The integration suites read
+# corpora from testdata/, which is ~2 GB and not committed; they skip rather
+# than fail when it is absent. So CI proves the tree builds, the unit tests
+# pass, and the skip paths work - it does not reproduce the accuracy figures in
+# the README. Those need the corpora and the reference tools, and are run
+# locally. See docs/testing.md.
+
+jobs:
+  rust:
+    name: rust (build, test, docs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Formatting
+        run: cargo fmt --all -- --check
+
+      - name: Build
+        run: cargo build --all-features --all-targets
+
+      - name: Tests
+        run: cargo test --all-features
+
+      # Broken intra-doc links render as dead text on docs.rs, which is the
+      # front page of the crate for most people who find it.
+      - name: Docs
+        run: cargo doc --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: Release build
+        run: cargo build --release --all-features
+
+      # Benches and fuzz targets are separate compilation units that nothing
+      # else builds. The API shrink broke every fuzz target and it went
+      # unnoticed, because `cargo test` does not touch them.
+      - name: Benches compile
+        run: cargo bench --all-features --no-run
+
+  fuzz:
+    name: fuzz targets compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - name: Check
+        working-directory: fuzz
+        run: cargo check --all-targets
+
+  features:
+    name: feature combinations
+    runs-on: ubuntu-latest
+    # Every format is behind a cargo feature, and those combinations only stay
+    # valid if something builds them. They did not: `--no-default-features`
+    # failed outright, and jpeg, iptc and ffi each failed on their own, because
+    # nothing had compiled them alone since the features were introduced.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: No features
+        run: cargo build --lib --no-default-features
+      - name: Each feature alone
+        run: |
+          for f in jpeg tiff png webp heif gif bmp xmp iptc icc pdf quicktime ffi; do
+            echo "::group::--features $f"
+            cargo build --lib --no-default-features --features "$f"
+            echo "::endgroup::"
+          done
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    # This gates on clippy's own deny-level lints, which are the ones that
+    # indicate a probable defect rather than a style preference - the tree is
+    # at zero of those and should stay there. It does not pass `-D warnings`:
+    # roughly 380 style findings remain, and turning them into a hard failure
+    # today would only teach people to ignore a red tick.
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-features --all-targets
+
+  # macOS bills at 10x and Windows at 2x the Linux rate on a private
+  # repository. Manual only: run it from the Actions tab when you want it.
+  cross-platform:
+    if: github.event_name == 'workflow_dispatch'
+    name: build ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    # Advisory until proven: the library claims to be cross-platform but has
+    # only ever been built and tested on Linux. Promote to a required check
+    # once these have been green for a while.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --all-features
+      - run: cargo test --all-features --lib
+
+  licences:
+    name: licences and notices
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Swatinem/rust-cache@v2
+
+      # Policy: which licences may enter the dependency graph, plus advisories.
+      - name: cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+
+      # Pinned: an unpinned generator makes the comparison below
+      # irreproducible, since a new cargo-about can reformat the output.
+      - name: Install cargo-about
+        run: cargo install --locked --features cli --version 0.9.2 cargo-about
+
+      # Attribution: MIT and Apache-2.0 require their notices to ship with the
+      # binary, so a stale file is a compliance gap, not a cosmetic one.
+      - name: Third-party notices are up to date
+        run: |
+          # tr: some licence texts carry CRLF, which would fail the diff on
+          # line endings alone.
+          cargo about generate --fail about.hbs | tr -d '\r' > /tmp/notices.md
+          if ! diff -u THIRD-PARTY-NOTICES.md /tmp/notices.md > /tmp/notices.diff; then
+            echo "::error::THIRD-PARTY-NOTICES.md is stale - regenerate with: cargo about generate --fail about.hbs | tr -d '\r' > THIRD-PARTY-NOTICES.md"
+            head -60 /tmp/notices.diff
+            exit 1
+          fi

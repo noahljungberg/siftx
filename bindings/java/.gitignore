@@ -1,0 +1,8 @@
+target/
+*.class
+*.jar
+.idea/
+*.iml
+
+# Native libraries staged into the JAR by the build, not by hand.
+src/main/resources/native/
