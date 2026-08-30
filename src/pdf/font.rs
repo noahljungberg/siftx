@@ -47,6 +47,8 @@ pub struct PdfFont {
     pub font_matrix_scale: f64,
 }
 
+pub type LoadedFont = (Vec<u8>, Option<(u32, u16)>, PdfFont);
+
 /// FE1: Parse a font dictionary from a resolved PdfObject.
 pub fn parse_font(doc: &Document, font_obj: &PdfObject) -> Result<PdfFont> {
     let subtype = font_obj
@@ -140,10 +142,7 @@ pub fn parse_font(doc: &Document, font_obj: &PdfObject) -> Result<PdfFont> {
 }
 
 /// Load all fonts from a page's /Resources /Font dictionary.
-pub fn load_page_fonts(
-    doc: &Document,
-    resources: Option<&PdfObject>,
-) -> Vec<(Vec<u8>, Option<(u32, u16)>, PdfFont)> {
+pub fn load_page_fonts(doc: &Document, resources: Option<&PdfObject>) -> Vec<LoadedFont> {
     let mut fonts = Vec::new();
 
     let resources = match resources {

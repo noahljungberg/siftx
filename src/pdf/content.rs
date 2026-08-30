@@ -1052,11 +1052,7 @@ impl<'a> ContentInterpreter<'a> {
     /// repeated `Do` of the same form, which keeps `self.fonts` bounded and
     /// keeps span grouping intact. Only a host without a ref (the page
     /// itself, registered once) falls back to a sequence number.
-    fn register_fonts(
-        &mut self,
-        loaded: Vec<(Vec<u8>, Option<(u32, u16)>, PdfFont)>,
-        host_ref: Option<(u32, u16)>,
-    ) {
+    fn register_fonts(&mut self, loaded: Vec<font::LoadedFont>, host_ref: Option<(u32, u16)>) {
         for (name, obj_ref, font) in loaded {
             let mut key = name.clone();
             match (obj_ref, host_ref) {
@@ -2666,7 +2662,9 @@ mod tests {
             out.extend_from_slice(b"\nendobj\n");
         }
         let xref_pos = out.len();
-        out.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes());
+        out.extend_from_slice(
+            format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes(),
+        );
         for off in offsets {
             out.extend_from_slice(format!("{off:010} 00000 n \n").as_bytes());
         }
@@ -2725,6 +2723,27 @@ mod tests {
         assemble_pdf(&objs)
     }
 
+    fn build_annotation_font_collision_pdf() -> Vec<u8> {
+        let objs: Vec<Vec<u8>> = vec![
+            b"<</Type/Catalog/Pages 2 0 R>>".to_vec(),
+            b"<</Type/Pages/Kids[3 0 R]/Count 1>>".to_vec(),
+            b"<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R\
+              /Resources<</Font<</F5 6 0 R>>>>/Annots[8 0 R]>>"
+                .to_vec(),
+            stream_obj("", b"BT /F5 12 Tf 50 700 Td (P\xC4GE) Tj ET"),
+            stream_obj("", &tounicode("0062")),
+            b"<</Type/Font/Subtype/Type1/BaseFont/Helvetica/ToUnicode 5 0 R>>".to_vec(),
+            b"<</Type/Font/Subtype/Type1/BaseFont/Helvetica/ToUnicode 10 0 R>>".to_vec(),
+            b"<</Type/Annot/Subtype/FreeText/Rect[0 0 100 100]/AP<</N 9 0 R>>>>".to_vec(),
+            stream_obj(
+                "/Subtype/Form/BBox[0 0 100 100]/Resources<</Font<</F5 7 0 R>>>>",
+                b"BT /F5 12 Tf 5 50 Td (L\xC4SKOPIA) Tj ET",
+            ),
+            stream_obj("", &tounicode("00C4")),
+        ];
+        assemble_pdf(&objs)
+    }
+
     #[test]
     fn cs22_form_font_name_collision_keeps_scopes_apart() {
         let pdf = build_f5_collision_pdf();
@@ -2774,10 +2793,22 @@ mod tests {
             form_spans[0].font_name, form_spans[1].font_name,
             "same direct font must keep one key across repeated Do"
         );
-        let font = fonts.get(&form_spans[0].font_name).expect("font key resolves");
+        let font = fonts
+            .get(&form_spans[0].font_name)
+            .expect("font key resolves");
         assert_eq!(
             font.to_unicode.as_ref().unwrap().lookup(0xC4).unwrap(),
             "\u{00C4}"
         );
+    }
+
+    #[test]
+    fn cs22_annotation_font_name_collision_keeps_scopes_apart() {
+        let pdf = build_annotation_font_collision_pdf();
+        let doc = Document::parse(&pdf).unwrap();
+        let page = doc.page(0).unwrap();
+        let text = crate::pdf::text_layout::extract_text_raw(&doc, &page).unwrap();
+
+        assert_eq!(text, "PbGEL\u{00C4}SKOPIA");
     }
 }
